@@ -131,7 +131,6 @@ dmypy.json
 **.DS_Store
 **.metaflow
 **lightning_logs/
-**ckpts/
-**artifacts/
+artifacts/data/mnist/MNIST/raw
 **.pt
 **wandb/

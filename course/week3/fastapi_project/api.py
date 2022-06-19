@@ -10,9 +10,11 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi import Request
 from pydantic import BaseModel, Field
+from sklearn.preprocessing import normalize
 
 import torch
 import torch.nn.functional as F
+import numpy as np
 
 from PIL import Image
 from torchvision import transforms
@@ -112,7 +114,7 @@ def predict(request: Request, body: InferenceInput):
   im = im.unsqueeze(0)
 
   with torch.no_grad():
-    logits = None
+    logits = system.forward(im)
 
     # ================================
     # FILL ME OUT
@@ -139,7 +141,7 @@ def predict(request: Request, body: InferenceInput):
     label = torch.argmax(logits, dim=1)  # shape (1)
     label = label.item()                 # tensor -> integer
 
-    probs = None
+    probs = (logits - logits.min()) / (logits.max() - logits.min())
     # ================================
     # FILL ME OUT
     # 

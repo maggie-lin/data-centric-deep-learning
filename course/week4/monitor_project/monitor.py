@@ -45,6 +45,9 @@ def main(args):
     #   outlier_score: perc of vocabulary that is new
     results = monitor.monitor(te_vocab, te_probs)
 
+    # results analysis
+    # https://colab.research.google.com/drive/1PWlsSsZ6qo4QJ7yLo1bKYjRhfymaFMBg#scrollTo=A8LlMflj9GK2
+
     if results is not None:
       print('\n==========================')
       print(f'STREAM ({index} out of 8)')

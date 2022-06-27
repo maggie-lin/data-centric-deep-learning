@@ -5,7 +5,8 @@ from sklearn.isotonic import IsotonicRegression
 
 
 def get_ks_score(tr_probs, te_probs):
-  score = None
+  stat, pval = ks_2samp(tr_probs.numpy(), te_probs.numpy())
+  score = pval
   # ============================
   # FILL ME OUT
   # 
@@ -30,7 +31,18 @@ def get_ks_score(tr_probs, te_probs):
 
 
 def get_hist_score(tr_probs, te_probs, bins=10):
-  score = None
+
+  tr_heights, bin_edges = np.histogram(a = tr_probs, density = True)
+  te_heights, _ = np.histogram(a = te_probs, bins = bin_edges, density = True)
+
+  score = 0
+  for i in range(bins):
+    bin_diff = np.diff(bin_edges)
+    tr_area = bin_diff[i] * tr_heights[i]
+    te_area = bin_diff[i] * te_heights[i]
+    intersect = min(tr_area, te_area)
+    score += intersect
+
   # ============================
   # FILL ME OUT
   # 
@@ -72,7 +84,12 @@ def get_hist_score(tr_probs, te_probs, bins=10):
 
 
 def get_vocab_outlier(tr_vocab, te_vocab):
-  score = None
+  same_keys = set(tr_vocab.keys()).intersection(set(te_vocab.keys()))
+
+  num_seen = len(list(same_keys))
+  num_total = len(tr_vocab)
+
+  score = 1 - (num_seen / num_total)
   # ============================
   # FILL ME OUT
   # 
@@ -107,8 +124,10 @@ class MonitoringSystem:
     self.tr_labels = tr_labels
 
   def calibrate(self, tr_probs, tr_labels, te_probs):
-    tr_probs_cal = None
-    te_probs_cal = None
+    iso_reg = IsotonicRegression(out_of_bounds='clip').fit(tr_probs, tr_labels)
+    tr_probs_cal = torch.from_numpy(iso_reg.predict(tr_probs))
+    te_probs_cal = torch.from_numpy(iso_reg.predict(te_probs))
+
     # ============================
     # FILL ME OUT
     # 

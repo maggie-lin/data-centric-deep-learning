@@ -1,4 +1,5 @@
 import torch
+import nltk
 import numpy as np
 import pandas as pd
 from os.path import join
@@ -31,6 +32,17 @@ class ProductReviewEmbeddings(Dataset):
 
   def get_vocab(self):
     vocab = defaultdict(lambda: 0)
+
+    for i in self.data.review:
+      tokens = nltk.word_tokenize(i)
+      for j in tokens:
+        curr_word = j.lower()
+        if curr_word in vocab.keys():
+          curr_count = vocab[curr_word]
+          vocab.update({curr_word: curr_count + 1})
+        else:
+          vocab.update({curr_word: 1})
+      
     # ===============================
     # FILL ME OUT
     # 
@@ -94,6 +106,16 @@ class ProductReviewStream(Dataset):
   def get_vocab(self):
     # `defaultdict` can be a helpful utility
     vocab = defaultdict(lambda: 0)
+
+    for i in self.data.review:
+      tokens = nltk.word_tokenize(i)
+      for j in tokens:
+        curr_word = j.lower()
+        if curr_word in vocab.keys():
+          curr_count = vocab[curr_word]
+          vocab.update({curr_word: curr_count + 1})
+        else:
+          vocab.update({curr_word: 1})
     # ===============================
     # FILL ME OUT
     # 

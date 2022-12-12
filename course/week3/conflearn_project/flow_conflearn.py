@@ -132,7 +132,47 @@ class TrainIdentifyReview(FlowSpec):
     kf = KFold(n_splits=3)    # create kfold splits
 
     for train_index, test_index in kf.split(X):
-      probs_ = None
+      # Get train and test slices of X and y.
+      X_train = X[train_index]
+      X_test = X[test_index]
+      y_train = y[train_index]
+      y_test = y[test_index]
+    
+      # Convert to torch tensors.
+      X_train_tensor = torch.from_numpy(X_train).float()
+      X_test_tensor = torch.from_numpy(X_test).float()
+      y_train_tensor = torch.from_numpy(y_train).long()
+      y_test_tensor = torch.from_numpy(y_test).long()
+
+      # Create train/test datasets using tensors.
+      train_ds = TensorDataset(X_train_tensor, y_train_tensor)
+      test_ds = TensorDataset(X_test_tensor, y_test_tensor)
+
+      # Create train/test data loaders from datasets.
+      train_dl = DataLoader(
+        dataset = train_ds,
+        batch_size = self.config.train.optimizer.batch_size,
+        shuffle = True
+      )
+
+      test_dl = DataLoader(
+        dataset = test_ds,
+        batch_size = self.config.train.optimizer.batch_size
+      )
+      
+      # Create `SentimentClassifierSystem`.
+      system = SentimentClassifierSystem(self.config)
+
+      # Create `Trainer` and call `fit`.
+      trainer = Trainer(max_epochs = self.config.train.optimizer.max_epochs)
+      trainer.fit(system, train_dl)
+
+      # Call `predict` on `Trainer` and the test data loader.
+      probs_ = trainer.predict(model = system, dataloaders = test_dl)
+
+      # Convert probabilities back to numpy (make sure 1D).
+      probs_ = torch.cat(probs_).squeeze(1).numpy()
+
       # ===============================================
       # FILL ME OUT
       # 
@@ -195,8 +235,12 @@ class TrainIdentifyReview(FlowSpec):
     prob = np.asarray(self.all_df.prob)
     prob = np.stack([1 - prob, prob]).T
   
-    # rank label indices by issues
-    ranked_label_issues = None
+    # rank label indices by issues   
+    ranked_label_issues = find_label_issues(
+      np.asarray(self.all_df.label),
+      prob,
+      return_indices_ranked_by = "self_confidence"
+    )
     
     # =============================
     # FILL ME OUT
@@ -295,6 +339,10 @@ class TrainIdentifyReview(FlowSpec):
     train_size = len(dm.train_dataset)
     dev_size = len(dm.dev_dataset)
 
+    ind = train_size + dev_size
+    dm.train_dataset.data = self.all_df.iloc[:train_size]
+    dm.dev_dataset.data = self.all_df.iloc[train_size:ind]
+    dm.test_dataset.data = self.all_df.iloc[ind:]
     # ====================================
     # FILL ME OUT
     # 

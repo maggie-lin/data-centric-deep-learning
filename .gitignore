@@ -1,4 +1,5 @@
 # Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -129,8 +130,7 @@ dmypy.json
 .pyre/
 **.DS_Store
 **.metaflow
-**logs/
 **lightning_logs/
-**ckpts/
-**artifacts/
+artifacts/data/mnist/MNIST/raw
 **.pt
+**wandb/

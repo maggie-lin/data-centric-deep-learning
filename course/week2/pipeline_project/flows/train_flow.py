@@ -44,7 +44,8 @@ class DigitClassifierFlow(FlowSpec):
     torch.manual_seed(42)
 
     # uncomment me when logging
-    # wandb.init()  # initialize wandb module
+    wandb.login(key='') # replace w/ key
+    wandb.init()  # initialize wandb module
 
     self.next(self.init_system)
 
@@ -75,18 +76,17 @@ class DigitClassifierFlow(FlowSpec):
     # what the model is doing and look out for early signs that something might 
     # be going wrong. We will be using 'Weights and Biases', a relatively new 
     # tool that makes logging in the cloud easy. 
-    # 
-    # wandb_logger = WandbLogger(
-    #   project = config.wandb.project, 
-    #   offline = False,
-    #   entity = config.wandb.entity, 
-    #   name = 'mnist', 
-    #   save_dir = 'logs/wandb',
-    #   config = config)
+    wandb_logger = WandbLogger(
+      project = config.wandb.project, 
+      offline = False,
+      entity = config.wandb.entity, 
+      name = 'mnist', 
+      save_dir = 'logs/wandb',
+      config = config)
 
     trainer = Trainer(
       max_epochs = config.system.optimizer.max_epochs,
-      # logger = wandb_logger,
+      logger = wandb_logger,
       callbacks = [checkpoint_callback])
 
     # when we save these objects to a `step`, they will be available
@@ -99,6 +99,7 @@ class DigitClassifierFlow(FlowSpec):
 
   @step
   def train_model(self):
+    wandb.init()
     """Calls `fit` on the trainer."""
 
     # Call `fit` on the trainer with `system` and `dm`.
@@ -106,10 +107,10 @@ class DigitClassifierFlow(FlowSpec):
     self.trainer.fit(self.system, self.dm)
 
     # uncomment me when logging
-    # wandb.finish()  # close wandb run
+    wandb.finish()  # close wandb run
 
     self.next(self.offline_test)
-
+ 
   @step
   def offline_test(self):
     r"""Calls (offline) `test` on the trainer. Saves results to a log file."""
